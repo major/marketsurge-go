@@ -1,6 +1,9 @@
 package marketsurge
 
-import "context"
+import (
+	"context"
+	"encoding/json"
+)
 
 // queryMarketDataAdhocScreen is the GraphQL query for the MarketDataAdhocScreen endpoint.
 const queryMarketDataAdhocScreen = `query MarketDataAdhocScreen(
@@ -325,8 +328,8 @@ type AdhocQueryTerm struct {
 
 // AdhocQueryTermLeft identifies the market data item being filtered.
 type AdhocQueryTermLeft struct {
-	Name     *string `json:"name"`
-	MDItemID *string `json:"mdItemID"`
+	Name     *string      `json:"name"`
+	MDItemID *json.Number `json:"mdItemID"`
 }
 
 // AdhocQueryTermRight holds the comparison values for a filter term.
@@ -344,8 +347,8 @@ type AdhocScreenCell struct {
 
 // AdhocScreenItem identifies a market data item in a screen cell.
 type AdhocScreenItem struct {
-	MDItemID *string `json:"mdItemID"`
-	Name     *string `json:"name"`
+	MDItemID *json.Number `json:"mdItemID"`
+	Name     *string      `json:"name"`
 }
 
 // ---------------------------------------------------------------------------
@@ -376,8 +379,8 @@ type RunScreenCell struct {
 
 // RunScreenItem identifies a market data item in a run screen cell.
 type RunScreenItem struct {
-	Name     *string `json:"name"`
-	MDItemID *string `json:"mdItemID"`
+	Name     *string      `json:"name"`
+	MDItemID *json.Number `json:"mdItemID"`
 }
 
 // ---------------------------------------------------------------------------

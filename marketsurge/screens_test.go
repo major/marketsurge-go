@@ -187,7 +187,12 @@ func TestMarketDataAdhocScreenAdhocQuery(t *testing.T) {
 		t.Fatal("term.Left is nil")
 	}
 	assertStringPtr(t, "term.Left.Name", term.Left.Name, "CompositeRating")
-	assertStringPtr(t, "term.Left.MDItemID", term.Left.MDItemID, "2001")
+	if term.Left.MDItemID == nil {
+		t.Fatal("term.Left.MDItemID is nil")
+	}
+	if got, want := term.Left.MDItemID.String(), "2001"; got != want {
+		t.Errorf("term.Left.MDItemID = %q, want %q", got, want)
+	}
 
 	if term.Right == nil {
 		t.Fatal("term.Right is nil")
@@ -234,7 +239,7 @@ func TestMarketDataAdhocScreenResponseValues(t *testing.T) {
 	if cell.MDItem.MDItemID == nil {
 		t.Fatal("cell.MDItem.MDItemID is nil")
 	}
-	if got, want := *cell.MDItem.MDItemID, "1001"; got != want {
+	if got, want := cell.MDItem.MDItemID.String(), "1001"; got != want {
 		t.Errorf("cell.MDItem.MDItemID = %q, want %q", got, want)
 	}
 }
@@ -517,6 +522,12 @@ func TestRunScreenResponseValues(t *testing.T) {
 	}
 	if got, want := *cell.MDItem.Name, "Symbol"; got != want {
 		t.Errorf("cell.MDItem.Name = %q, want %q", got, want)
+	}
+	if cell.MDItem.MDItemID == nil {
+		t.Fatal("cell.MDItem.MDItemID is nil")
+	}
+	if got, want := cell.MDItem.MDItemID.String(), "2001"; got != want {
+		t.Errorf("cell.MDItem.MDItemID = %q, want %q", got, want)
 	}
 }
 
