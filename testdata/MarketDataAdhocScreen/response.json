@@ -1,0 +1,45 @@
+{
+  "data": {
+    "marketDataAdhocScreen": {
+      "correlationTag": "marketsurge",
+      "elapsedTime": "42ms",
+      "errorValues": [],
+      "numberOfInstrumentsInSource": 8500,
+      "numberOfMatchingInstruments": 2,
+      "responseValues": [
+        [
+          {
+            "value": "AAPL",
+            "mdItem": {
+              "mdItemID": "1001",
+              "name": "Symbol"
+            }
+          },
+          {
+            "value": "Apple Inc",
+            "mdItem": {
+              "mdItemID": "1002",
+              "name": "CompanyName"
+            }
+          }
+        ],
+        [
+          {
+            "value": "MSFT",
+            "mdItem": {
+              "mdItemID": "1001",
+              "name": "Symbol"
+            }
+          },
+          {
+            "value": "Microsoft Corp",
+            "mdItem": {
+              "mdItemID": "1002",
+              "name": "CompanyName"
+            }
+          }
+        ]
+      ]
+    }
+  }
+}
