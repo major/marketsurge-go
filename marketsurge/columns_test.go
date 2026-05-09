@@ -1,6 +1,7 @@
 package marketsurge_test
 
 import (
+	"encoding/json"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
@@ -53,7 +54,7 @@ func TestColumnsNoDuplicateNames(t *testing.T) {
 	t.Parallel()
 
 	cols := marketsurge.Columns()
-	seen := make(map[string]bool, len(cols))
+	seen := make(map[marketsurge.ColumnName]bool, len(cols))
 
 	for _, col := range cols {
 		if seen[col.Name] {
@@ -83,7 +84,7 @@ func TestColumnsContainsKnownEntries(t *testing.T) {
 	t.Parallel()
 
 	cols := marketsurge.Columns()
-	byName := make(map[string]marketsurge.ColumnInfo, len(cols))
+	byName := make(map[marketsurge.ColumnName]marketsurge.ColumnInfo, len(cols))
 	for _, col := range cols {
 		byName[col.Name] = col
 	}
@@ -148,14 +149,14 @@ func TestColumnConstantsMatchCatalog(t *testing.T) {
 	t.Parallel()
 
 	cols := marketsurge.Columns()
-	byName := make(map[string]bool, len(cols))
+	byName := make(map[marketsurge.ColumnName]bool, len(cols))
 	for _, col := range cols {
 		byName[col.Name] = true
 	}
 
 	// Verify a representative set of constants appear in the catalog.
 	// These span different categories to catch structural issues.
-	constants := []string{
+	constants := []marketsurge.ColumnName{
 		marketsurge.ColumnEPSRating,
 		marketsurge.ColumnRSRating,
 		marketsurge.ColumnSMRRating,
@@ -199,15 +200,14 @@ func TestColumnsSmartSelectHasDescription(t *testing.T) {
 func TestColumnsIncludesSpaceNames(t *testing.T) {
 	t.Parallel()
 
-	// Wire names with spaces can't be Go constants but must appear
-	// in the catalog for completeness.
+	// Wire names with spaces must appear in the catalog for completeness.
 	cols := marketsurge.Columns()
-	byName := make(map[string]bool, len(cols))
+	byName := make(map[marketsurge.ColumnName]bool, len(cols))
 	for _, col := range cols {
 		byName[col.Name] = true
 	}
 
-	spaceNames := []string{
+	spaceNames := []marketsurge.ColumnName{
 		"Timeliness Rating",
 		"Options Exchange",
 		"Add To List Date",
@@ -217,6 +217,134 @@ func TestColumnsIncludesSpaceNames(t *testing.T) {
 		if !byName[sn] {
 			t.Errorf("space-name column %q not found in catalog", sn)
 		}
+	}
+}
+
+func TestColumnNameString(t *testing.T) {
+	t.Parallel()
+
+	name := marketsurge.ColumnName("Add To List Date")
+	if got, want := name.String(), "Add To List Date"; got != want {
+		t.Errorf("ColumnName(%q).String() = %q, want %q", want, got, want)
+	}
+}
+
+func TestLookupColumn(t *testing.T) {
+	t.Parallel()
+
+	info, ok := marketsurge.LookupColumn(marketsurge.ColumnEPSRating)
+	if !ok {
+		t.Fatal("LookupColumn(ColumnEPSRating) found = false, want true")
+	}
+	if got, want := info.DisplayName, "EPS Rating"; got != want {
+		t.Errorf("LookupColumn(ColumnEPSRating).DisplayName = %q, want %q", got, want)
+	}
+
+	spaceInfo, ok := marketsurge.LookupColumn(marketsurge.ColumnName("Add To List Date"))
+	if !ok {
+		t.Fatal("LookupColumn(ColumnName(\"Add To List Date\")) found = false, want true")
+	}
+	if got, want := spaceInfo.Name, marketsurge.ColumnName("Add To List Date"); got != want {
+		t.Errorf("LookupColumn(ColumnName(\"Add To List Date\")).Name = %q, want %q", got, want)
+	}
+
+	if _, found := marketsurge.LookupColumn(marketsurge.ColumnName("NotARealColumn")); found {
+		t.Fatal("LookupColumn(ColumnName(\"NotARealColumn\")) found = true, want false")
+	}
+}
+
+func TestColumnsByCategory(t *testing.T) {
+	t.Parallel()
+
+	cols := marketsurge.ColumnsByCategory("SmartSelect Rating")
+	if len(cols) == 0 {
+		t.Fatal("ColumnsByCategory(\"SmartSelect Rating\") returned empty slice")
+	}
+
+	for _, col := range cols {
+		if got, want := col.Category, "SmartSelect Rating"; got != want {
+			t.Errorf("ColumnsByCategory(\"SmartSelect Rating\") entry %q category = %q, want %q", col.Name, got, want)
+		}
+	}
+
+	cols[0].Name = "MUTATED"
+	fresh := marketsurge.ColumnsByCategory("SmartSelect Rating")
+	if fresh[0].Name == "MUTATED" {
+		t.Fatal("ColumnsByCategory() returned catalog backing array, not a copy")
+	}
+}
+
+func TestColumnCategories(t *testing.T) {
+	t.Parallel()
+
+	categories := marketsurge.ColumnCategories()
+	if len(categories) == 0 {
+		t.Fatal("ColumnCategories() returned empty slice")
+	}
+
+	seen := make(map[string]bool, len(categories))
+	for _, category := range categories {
+		if category == "" {
+			t.Error("ColumnCategories() included empty category")
+		}
+		if seen[category] {
+			t.Errorf("ColumnCategories() included duplicate category %q", category)
+		}
+		seen[category] = true
+	}
+
+	if !seen["SmartSelect Rating"] {
+		t.Error("ColumnCategories() missing SmartSelect Rating")
+	}
+
+	categories[0] = "MUTATED"
+	fresh := marketsurge.ColumnCategories()
+	if fresh[0] == "MUTATED" {
+		t.Fatal("ColumnCategories() returned same backing array, not a copy")
+	}
+}
+
+func TestResponseColumnHelpers(t *testing.T) {
+	t.Parallel()
+
+	adhoc := marketsurge.AdhocScreenColumns(marketsurge.ColumnSymbol, marketsurge.ColumnName("Add To List Date"))
+	wantAdhoc := []marketsurge.AdhocScreenResponseColumn{
+		{Name: marketsurge.ColumnSymbol},
+		{Name: marketsurge.ColumnName("Add To List Date")},
+	}
+	if diff := cmp.Diff(wantAdhoc, adhoc); diff != "" {
+		t.Errorf("AdhocScreenColumns() mismatch (-want +got):\n%s", diff)
+	}
+
+	run := marketsurge.RunScreenColumns(marketsurge.ColumnSymbol, marketsurge.ColumnCompanyName)
+	wantRun := []marketsurge.RunScreenResponseColumn{
+		{Name: marketsurge.ColumnSymbol},
+		{Name: marketsurge.ColumnCompanyName},
+	}
+	if diff := cmp.Diff(wantRun, run); diff != "" {
+		t.Errorf("RunScreenColumns() mismatch (-want +got):\n%s", diff)
+	}
+
+	if got := marketsurge.AdhocScreenColumns(); got != nil {
+		t.Errorf("AdhocScreenColumns() = %v, want nil", got)
+	}
+	if got := marketsurge.RunScreenColumns(); got != nil {
+		t.Errorf("RunScreenColumns() = %v, want nil", got)
+	}
+}
+
+func TestColumnNameJSONShape(t *testing.T) {
+	t.Parallel()
+
+	columns := marketsurge.RunScreenColumns(marketsurge.ColumnSymbol, marketsurge.ColumnName("Add To List Date"))
+	got, err := json.Marshal(columns)
+	if err != nil {
+		t.Fatalf("json.Marshal(RunScreenColumns()) error = %v", err)
+	}
+
+	want := `[{"name":"Symbol"},{"name":"Add To List Date"}]`
+	if string(got) != want {
+		t.Errorf("json.Marshal(RunScreenColumns()) = %s, want %s", got, want)
 	}
 }
 

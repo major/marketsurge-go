@@ -18,6 +18,8 @@ Path instructions in `.coderabbit.yaml` are scoped to the concerns that matter m
 
 **MarketSurge GraphQL API contracts** - GraphQL operation names, query strings, variable structures, and response models must match captured browser traffic. Any drift from the captured traffic is a bug, not a style issue. Flag it.
 
+**Static catalogs** - `marketsurge/columns.go` and `marketsurge/report_screens.go` contain captured API data. Wire names, report screen identifiers, spacing, and capitalization must remain exact. Catalog functions should return defensive copies, and `ColumnName` request helpers should not normalize, trim, or reject names that upstream may already accept.
+
 **Explicit session and JWT handling** - `ExchangeJWT` uses cookies to obtain a JWT. Sessions created via `NewSession` carry that JWT. Neither cookies nor JWT values should appear in error messages, log output, or test assertions. Flag any exposure.
 
 **Browser-auth isolation** - kooky, SQLite, and Firefox profile access belong in `marketsurge/browserauth/` only. The `marketsurge` package must not import them. If a change adds such an import to the `marketsurge` package, that's a hard violation.

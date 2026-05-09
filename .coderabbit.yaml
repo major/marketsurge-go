@@ -55,6 +55,14 @@ path_instructions:
     instructions: |
       doGraphQL is the transport core. Review for: context propagated correctly to every HTTP request, correct headers set on every request (Authorization, Content-Type, Apollographql-Client-Name, Dylan-Entitlement-Token, Referer, Origin, User-Agent), response body limit enforced before reading, GraphQL errors decoded from the response body and returned as typed errors, no silent swallowing of HTTP or GraphQL errors.
 
+  - path: "marketsurge/columns.go"
+    instructions: |
+      Column catalog data is derived from captured MarketSurge browser assets. Review for: exact preservation of wire names including spaces and capitalization, `ColumnName` values passed through without validation or normalization, catalog lookup/category helpers returning caller-owned slices, and response-column helpers preserving the existing GraphQL JSON shape.
+
+  - path: "marketsurge/report_screens.go"
+    instructions: |
+      Report screen catalog data is static API data. Review for: exact preservation of captured identifiers and names, no GraphQL transport behavior added here, and catalog accessors returning defensive copies.
+
   - path: "*_test.go"
     instructions: |
       Tests use stdlib testing only (no testify, no require, no assert). Review for: t.Parallel() on every top-level test and subtest, httptest.NewServer with inline request validation handlers, t.Helper() on all helper functions, table-driven subtests with t.Run(), request body JSON verified for operationName, variables, and query fields, fixture-based response testing, assertStringPtr/assertIntPtr helpers used instead of bare if-checks where they exist.

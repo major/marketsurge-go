@@ -131,7 +131,7 @@ type AdhocScreenSortInformation struct {
 // AdhocScreenResponseColumn identifies a data column to include in the adhoc screen response.
 // Set SortInformation to control server-side sorting of the results.
 type AdhocScreenResponseColumn struct {
-	Name            string                      `json:"name"`
+	Name            ColumnName                  `json:"name"`
 	SortInformation *AdhocScreenSortInformation `json:"sortInformation,omitempty"`
 }
 
@@ -169,9 +169,11 @@ type MarketDataAdhocScreenRequest struct {
 // NewMarketDataAdhocScreenRequest creates a MarketDataAdhocScreenRequest with sensible defaults
 // for the given response columns.
 func NewMarketDataAdhocScreenRequest(responseColumns []AdhocScreenResponseColumn) MarketDataAdhocScreenRequest {
+	columns := append([]AdhocScreenResponseColumn(nil), responseColumns...)
+
 	return MarketDataAdhocScreenRequest{
 		CorrelationTag:  DefaultAdhocScreenCorrelationTag,
-		ResponseColumns: responseColumns,
+		ResponseColumns: columns,
 		IncludeSource:   AdhocScreenIncludeSource{},
 		PageSize:        DefaultAdhocScreenPageSize,
 		ResultLimit:     DefaultAdhocScreenResultLimit,
@@ -206,7 +208,7 @@ type RunScreenSortInformation struct {
 // RunScreenResponseColumn identifies a data column to include in the RunScreen response.
 // Set SortInformation to control server-side sorting of the results.
 type RunScreenResponseColumn struct {
-	Name            string                    `json:"name"`
+	Name            ColumnName                `json:"name"`
 	SortInformation *RunScreenSortInformation `json:"sortInformation,omitempty"`
 }
 
@@ -238,6 +240,8 @@ type RunScreenRequest struct {
 // NewRunScreenRequest creates a RunScreenRequest with sensible defaults
 // for the given screen ID and response columns.
 func NewRunScreenRequest(screenID string, responseColumns []RunScreenResponseColumn) RunScreenRequest {
+	columns := append([]RunScreenResponseColumn(nil), responseColumns...)
+
 	return RunScreenRequest{
 		Input: RunScreenInput{
 			CorrelationTag:  DefaultRunScreenCorrelationTag,
@@ -247,7 +251,7 @@ func NewRunScreenRequest(screenID string, responseColumns []RunScreenResponseCol
 			ScreenID:        screenID,
 			Site:            DefaultRunScreenSite,
 			Skip:            0,
-			ResponseColumns: responseColumns,
+			ResponseColumns: columns,
 		},
 	}
 }

@@ -60,7 +60,7 @@ func adhocScreenFixture(t *testing.T) *AdhocScreenResult {
 func TestNewMarketDataAdhocScreenRequest(t *testing.T) {
 	t.Parallel()
 
-	columns := []AdhocScreenResponseColumn{{Name: "Symbol"}}
+	columns := AdhocScreenColumns(ColumnSymbol)
 	req := NewMarketDataAdhocScreenRequest(columns)
 
 	if got, want := req.CorrelationTag, DefaultAdhocScreenCorrelationTag; got != want {
@@ -83,6 +83,18 @@ func TestNewMarketDataAdhocScreenRequest(t *testing.T) {
 	}
 	if req.AdhocQuery != nil {
 		t.Errorf("AdhocQuery = %v, want nil", req.AdhocQuery)
+	}
+}
+
+func TestNewMarketDataAdhocScreenRequestCopiesColumns(t *testing.T) {
+	t.Parallel()
+
+	columns := AdhocScreenColumns(ColumnSymbol)
+	req := NewMarketDataAdhocScreenRequest(columns)
+	columns[0].Name = ColumnPrice
+
+	if got, want := req.ResponseColumns[0].Name, ColumnName(ColumnSymbol); got != want {
+		t.Errorf("ResponseColumns[0].Name after caller mutation = %q, want %q", got, want)
 	}
 }
 
@@ -414,7 +426,7 @@ func runScreenFixture(t *testing.T) *RunScreenResult {
 func TestNewRunScreenRequest(t *testing.T) {
 	t.Parallel()
 
-	req := NewRunScreenRequest("screen-123", []RunScreenResponseColumn{{Name: "Symbol"}})
+	req := NewRunScreenRequest("screen-123", RunScreenColumns(ColumnSymbol))
 
 	if got, want := req.Input.CorrelationTag, DefaultRunScreenCorrelationTag; got != want {
 		t.Errorf("CorrelationTag = %q, want %q", got, want)
@@ -443,8 +455,20 @@ func TestNewRunScreenRequest(t *testing.T) {
 	if got, want := len(req.Input.ResponseColumns), 1; got != want {
 		t.Errorf("len(ResponseColumns) = %d, want %d", got, want)
 	}
-	if got, want := req.Input.ResponseColumns[0].Name, "Symbol"; got != want {
+	if got, want := req.Input.ResponseColumns[0].Name, ColumnName(ColumnSymbol); got != want {
 		t.Errorf("ResponseColumns[0].Name = %q, want %q", got, want)
+	}
+}
+
+func TestNewRunScreenRequestCopiesColumns(t *testing.T) {
+	t.Parallel()
+
+	columns := RunScreenColumns(ColumnSymbol)
+	req := NewRunScreenRequest("screen-123", columns)
+	columns[0].Name = ColumnPrice
+
+	if got, want := req.Input.ResponseColumns[0].Name, ColumnName(ColumnSymbol); got != want {
+		t.Errorf("ResponseColumns[0].Name after caller mutation = %q, want %q", got, want)
 	}
 }
 

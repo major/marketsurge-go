@@ -12,6 +12,7 @@ Focus reviews on bugs, security issues, data loss, broken API contracts, and pro
 - Library code must not call `os.Exit`, write user-facing output, read hidden config files, or inspect environment variables.
 - Every public method that performs an HTTP request takes `context.Context` as its first parameter.
 - GraphQL operation names, query strings, variable structures, and response models must match captured MarketSurge browser traffic. Don't invent or simplify them.
+- Static catalog APIs such as `Columns()`, `LookupColumn`, `ColumnCategories`, and `ReportScreens()` must preserve captured MarketSurge names exactly and return defensive copies where they expose slices.
 - Preserve the typed errors and predicate helpers from `marketsurge/errors.go`: `IsAuthError`, `IsRateLimited`, `RetryAfter`, `IsBodyLimit`, `StatusCode`.
 - All exported identifiers must have Go doc comments that are useful, not just restatements of the name.
 
@@ -27,6 +28,7 @@ Focus reviews on bugs, security issues, data loss, broken API contracts, and pro
 - Each endpoint method wraps `doGraphQL` with typed request and response structs specific to that endpoint.
 - GraphQL queries embedded as string constants must match captured traffic verbatim. Don't paraphrase or reformat them.
 - Do not silently mutate caller-provided cookies, headers, slices, or maps. Copy defensively at boundaries.
+- `ColumnName` is the typed wire name for response columns. Do not normalize, trim, or validate it in request helpers because upstream may add valid names before the local catalog is updated.
 
 ## Testing expectations
 

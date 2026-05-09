@@ -53,10 +53,14 @@ Each endpoint gets its own file pair:
 | `watchlists.go` | `watchlists_test.go` | `GetAllWatchlistNames`, `FlaggedSymbols` |
 | `screens.go` | `screens_test.go` | `MarketDataAdhocScreen`, `RunScreen`, `Screens` |
 | `coach_tree.go` | `coach_tree_test.go` | `CoachTree`, `IndustryGroupRS` |
+| `columns.go` | `columns_test.go` | Static column catalog, `ColumnName`, response-column helpers |
+| `report_screens.go` | `report_screens_test.go` | Static report screen catalog |
 
 Infrastructure files: `client.go`, `options.go`, `errors.go`, `graphql.go`, `auth.go`, `session.go`, `doc.go`.
 
 Special test: `import_smoke_test.go` verifies the root package does not pull in kooky/SQLite/browser-store transitive deps.
+
+Catalog files are static API data, not HTTP endpoints. Preserve captured wire names exactly, including spaces and capitalization, and keep catalog accessors copy-returning so callers cannot mutate package data.
 
 ### Adding a new endpoint
 

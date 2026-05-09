@@ -171,7 +171,7 @@ Each endpoint has a `NewXxxRequest` constructor with sensible defaults. All meth
 
 ## Static catalogs
 
-`Columns()` returns the known MarketSurge response column catalog. `ReportScreens()` returns the built-in report screen catalog with each screen ID, name, and description captured from the MarketSurge web bundle. Both functions return copies so callers can filter or mutate the returned slices safely.
+`Columns()` returns the known MarketSurge response column catalog. Use `LookupColumn`, `ColumnsByCategory`, and `ColumnCategories` to inspect catalog metadata. Use `AdhocScreenColumns` and `RunScreenColumns` to turn `ColumnName` values into request columns without hand-writing response column structs. `ReportScreens()` returns the built-in report screen catalog with each screen ID, name, and description captured from the MarketSurge web bundle. Catalog functions return copies so callers can filter or mutate returned slices safely.
 
 ## Error handling
 

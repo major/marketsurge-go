@@ -73,6 +73,7 @@ GoReleaser v2, source-only (no binary targets). SHA256 checksums, cosign keyless
 - Library code must not call `os.Exit`, read environment variables, write user-facing output, or read config files.
 - Every public method that performs an HTTP request takes `context.Context` as its first parameter.
 - GraphQL operation names, query strings, variable structures, and response models must match captured MarketSurge browser traffic verbatim. Do not invent or simplify them.
+- Static catalogs such as `Columns()` and `ReportScreens()` are API contract. Preserve captured wire names exactly, including spacing and capitalization, and return defensive copies from catalog accessors.
 - Typed errors (`StatusError`, `GraphQLError`, `DecodeError`, `BodyLimitError`) and predicate helpers (`IsAuthError`, `IsRateLimited`, `RetryAfter`, `IsBodyLimit`, `StatusCode`) are API contract.
 - All exported identifiers must have useful Go doc comments, not restatements of the name.
 - `//nolint` directives must name the specific linter and include a brief explanation.

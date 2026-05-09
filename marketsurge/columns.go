@@ -53,10 +53,11 @@ package marketsurge
 //
 //   Compare the extracted JSON against the existing constants and catalog
 //   entries below. Add new columns, update changed descriptions, and
-//   remove any that no longer appear. Columns whose wire name contains
-//   spaces cannot be Go constants and appear only in the Columns() catalog.
-//   Duplicate wire names (same name, different internal IDs) get one
-//   constant and one catalog entry for the primary (stock) variant.
+//   remove any that no longer appear. Columns whose wire names are not exposed
+//   as package constants still appear in the Columns() catalog and can be used
+//   by converting the exact wire name to ColumnName. Duplicate wire names (same
+//   name, different internal IDs) get one constant and one catalog entry for
+//   the primary (stock) variant.
 //
 // The webpack bundle also contains formatter functions for each column
 // (p.toInteger, p.toDecimal, arrow functions for date formatting, etc.).
@@ -64,12 +65,24 @@ package marketsurge
 // data contract. The wire format always returns string values regardless
 // of the column's display type.
 
+// ColumnName is a MarketSurge GraphQL response column wire name.
+//
+// MarketSurge accepts some column names that contain spaces or are not exposed
+// as package constants. Convert those values with ColumnName without changing
+// their spelling, spacing, or capitalization.
+type ColumnName string
+
+// String returns the raw MarketSurge wire name.
+func (n ColumnName) String() string {
+	return string(n)
+}
+
 // ColumnInfo describes a data column available in MarketSurge screen and
 // report queries. Use the Name field as values in [RunScreenResponseColumn]
 // and [AdhocScreenResponseColumn] fields.
 type ColumnInfo struct {
 	// Name is the wire name sent in GraphQL query responseColumns.
-	Name string
+	Name ColumnName
 
 	// DisplayName is the human-readable label shown in the MarketSurge UI.
 	DisplayName string
@@ -835,12 +848,96 @@ const (
 // Columns returns a copy of the full column catalog. Each entry includes
 // the wire name, display name, description, and category.
 //
-// Some wire names contain spaces and cannot be represented as Go constants.
-// Those columns are only available through this catalog. Callers can filter
-// or search the returned slice by any field.
+// Some wire names contain spaces or are otherwise not exposed as package
+// constants. Those columns are available through this catalog and can be used
+// by converting the exact wire name to [ColumnName].
 func Columns() []ColumnInfo {
 	result := make([]ColumnInfo, len(columns))
 	copy(result, columns)
+	return result
+}
+
+// LookupColumn returns catalog metadata for the given wire name.
+//
+// The lookup matches MarketSurge wire names exactly. It does not trim,
+// normalize, or validate names because upstream may add columns before this
+// catalog is updated.
+func LookupColumn(name ColumnName) (ColumnInfo, bool) {
+	for _, col := range columns {
+		if col.Name == name {
+			return col, true
+		}
+	}
+
+	return ColumnInfo{}, false
+}
+
+// ColumnsByCategory returns catalog entries in the given MarketSurge category.
+//
+// The category match is exact. The returned slice is a copy and is safe for
+// callers to mutate.
+func ColumnsByCategory(category string) []ColumnInfo {
+	var result []ColumnInfo
+	for _, col := range columns {
+		if col.Category == category {
+			result = append(result, col)
+		}
+	}
+
+	return result
+}
+
+// ColumnCategories returns the known MarketSurge column categories in catalog order.
+//
+// Uncategorized columns are omitted. The returned slice is a copy and is safe
+// for callers to mutate.
+func ColumnCategories() []string {
+	seen := make(map[string]bool)
+	var result []string
+
+	for _, col := range columns {
+		if col.Category == "" || seen[col.Category] {
+			continue
+		}
+
+		seen[col.Category] = true
+		result = append(result, col.Category)
+	}
+
+	return result
+}
+
+// AdhocScreenColumns converts wire names to adhoc screen response columns.
+//
+// The helper does not validate or normalize names. Use struct literals instead
+// when a column needs sort information.
+func AdhocScreenColumns(names ...ColumnName) []AdhocScreenResponseColumn {
+	if len(names) == 0 {
+		return nil
+	}
+
+	result := make([]AdhocScreenResponseColumn, len(names))
+	for i, name := range names {
+		result[i] = AdhocScreenResponseColumn{Name: name}
+	}
+
+	return result
+}
+
+// RunScreenColumns converts wire names to RunScreen response columns.
+//
+// The helper does not validate or normalize names. Use struct literals instead
+// when a column needs sort information.
+func RunScreenColumns(names ...ColumnName) []RunScreenResponseColumn {
+	if len(names) == 0 {
+		return nil
+	}
+
+	result := make([]RunScreenResponseColumn, len(names))
+	for i, name := range names {
+		result[i] = RunScreenResponseColumn{Name: name}
+	}
+
 	return result
 }
 
