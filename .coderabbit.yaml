@@ -1,0 +1,80 @@
+# CodeRabbit Configuration for marketsurge-go
+
+tone_instructions: |
+  You are a dry-wit senior Go developer who has seen every mistake twice. Be direct and specific.
+  Skip the praise. Flag real problems. If something is fine, say nothing or say it's fine in one line.
+  Prefer short, punchy comments over long explanations. Sarcasm is acceptable when warranted.
+
+reviews:
+  profile: chill
+  auto_review:
+    enabled: false
+    drafts: false
+  request_changes_workflow: false
+  high_level_summary: true
+  poem: false
+  review_status: true
+  collapse_walkthrough: true
+  sequence_diagrams: false
+
+path_filters:
+  - "!**/vendor/**"
+  - "!**/dist/**"
+  - "!*.har"
+  - "!.sisyphus/**"
+  - "!coverage.out"
+
+path_instructions:
+  - path: "*.go"
+    instructions: |
+      Root package Go files form the public library API for authenticated MarketSurge GraphQL endpoints.
+      Review for: correct GraphQL client patterns, typed request/response structs, context propagation on every method that performs a request, explicit session and JWT handling, GraphQL query constants that match captured browser traffic, typed errors with predicate helpers (IsAuthError, IsRateLimited, RetryAfter, IsBodyLimit, StatusCode).
+      Never log or expose cookies or JWT tokens in errors, test output, or log statements.
+
+  - path: "auth.go"
+    instructions: |
+      ExchangeJWT uses cookies to obtain a JWT token. Review for: cookies used correctly and not stored beyond the call, JWT token not exposed in error messages or logs, auth failures classifiable through IsAuthError, context propagated to the HTTP request.
+
+  - path: "session.go"
+    instructions: |
+      NewSession manages explicit session state. Review for: defensive cookie copying so callers can't mutate internal state, no leaking of cookie values or JWT tokens in errors or logs, session fields not exported if they carry secret values.
+
+  - path: "browserauth/**/*.go"
+    instructions: |
+      Browser-backed auth lives here and only here. Review for: browser-store dependencies (kooky, SQLite) isolated to this package and not imported by the root package, desktop automation use case only (not for server-side use), no exposing Firefox profile paths or raw cookie values in errors or logs.
+
+  - path: "errors.go"
+    instructions: |
+      Typed errors and predicate helpers are a core API contract. Review for: each error type carrying status code, HTTP method, path, and content type where relevant, predicate helpers (IsAuthError, IsRateLimited, RetryAfter, IsBodyLimit, StatusCode) covering all error types, no leaking of cookies, JWT tokens, or session data in error messages.
+
+  - path: "options.go"
+    instructions: |
+      Client configuration must be explicit and predictable. Review for: all options expressed through functional option functions (WithHTTPClient, WithBaseURL, WithResponseBodyLimit), no hidden environment variable reads or config file lookups, invalid option values failing clearly at construction time rather than silently at request time.
+
+  - path: "client.go"
+    instructions: |
+      doGraphQL is the transport core. Review for: context propagated correctly to every HTTP request, correct headers set on every request (Authorization, Content-Type, Apollographql-Client-Name, Dylan-Entitlement-Token, Referer, Origin, User-Agent), response body limit enforced before reading, GraphQL errors decoded from the response body and returned as typed errors, no silent swallowing of HTTP or GraphQL errors.
+
+  - path: "*_test.go"
+    instructions: |
+      Tests use stdlib testing only (no testify, no require, no assert). Review for: t.Parallel() on every top-level test and subtest, httptest.NewServer with inline request validation handlers, t.Helper() on all helper functions, table-driven subtests with t.Run(), request body JSON verified for operationName, variables, and query fields, fixture-based response testing, assertStringPtr/assertIntPtr helpers used instead of bare if-checks where they exist.
+
+  - path: ".github/workflows/**"
+    instructions: |
+      Validate workflow syntax, permissions, and secret handling. Actions must be pinned to a commit SHA. Permissions must be minimal (contents: read at most for a library). Secrets must not be echoed or logged.
+
+  - path: ".goreleaser.yml"
+    instructions: |
+      GoReleaser v2 config for a source-only library (no main package, no binaries). Review for: source archive included, checksums present, keyless cosign signing configured, no binary build targets.
+
+chat:
+  auto_reply: true
+
+knowledge_base:
+  learnings:
+    scope: global
+  code_guidelines:
+    enabled: true
+    filePatterns:
+      - "guidelines.md"
+      - "**/AGENTS.md"
