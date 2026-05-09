@@ -449,8 +449,11 @@ func TestNewRunScreenRequest(t *testing.T) {
 	if got, want := req.Input.Skip, 0; got != want {
 		t.Errorf("Skip = %d, want %d", got, want)
 	}
-	if req.Input.IncludeSource != nil {
-		t.Errorf("IncludeSource = %v, want nil", req.Input.IncludeSource)
+	if req.Input.IncludeSource == nil {
+		t.Fatal("IncludeSource is nil")
+	}
+	if req.Input.IncludeSource.Source != nil {
+		t.Errorf("IncludeSource.Source = %v, want nil", req.Input.IncludeSource.Source)
 	}
 	if got, want := len(req.Input.ResponseColumns), 1; got != want {
 		t.Errorf("len(ResponseColumns) = %d, want %d", got, want)

@@ -4,7 +4,7 @@
     "input": {
       "correlationTag": "marketsurge",
       "coachAccount": true,
-      "includeSource": null,
+      "includeSource": {},
       "pageSize": 1000,
       "resultLimit": 1000000,
       "screenId": "screen-abc-123",

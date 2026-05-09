@@ -214,7 +214,8 @@ type RunScreenResponseColumn struct {
 
 // RunScreenIncludeSource specifies the data source universe for a RunScreen query.
 // Set Source to restrict results to a specific source (e.g. "IBD_STOCKS").
-// A nil RunScreenIncludeSource pointer on RunScreenInput sends null on the wire.
+// NewRunScreenRequest sends an empty includeSource object by default because
+// MarketSurge requires the input field to be present.
 type RunScreenIncludeSource struct {
 	Source *string `json:"source,omitempty"`
 }
@@ -246,6 +247,7 @@ func NewRunScreenRequest(screenID string, responseColumns []RunScreenResponseCol
 		Input: RunScreenInput{
 			CorrelationTag:  DefaultRunScreenCorrelationTag,
 			CoachAccount:    true,
+			IncludeSource:   &RunScreenIncludeSource{},
 			PageSize:        DefaultRunScreenPageSize,
 			ResultLimit:     DefaultRunScreenResultLimit,
 			ScreenID:        screenID,
