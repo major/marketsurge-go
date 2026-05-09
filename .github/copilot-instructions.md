@@ -7,19 +7,19 @@ Focus reviews on bugs, security issues, data loss, broken API contracts, and pro
 ## Project invariants
 
 - Module path: `github.com/major/marketsurge-go`
-- Public packages: root package and `browserauth/`
-- The root package must stay free of browser-store, SQLite, and kooky dependencies. Those belong exclusively in `browserauth/`.
+- Public packages: `marketsurge/` and `marketsurge/browserauth/`
+- The `marketsurge` package must stay free of browser-store, SQLite, and kooky dependencies. Those belong exclusively in `marketsurge/browserauth/`.
 - Library code must not call `os.Exit`, write user-facing output, read hidden config files, or inspect environment variables.
 - Every public method that performs an HTTP request takes `context.Context` as its first parameter.
 - GraphQL operation names, query strings, variable structures, and response models must match captured MarketSurge browser traffic. Don't invent or simplify them.
-- Preserve the typed errors and predicate helpers from `errors.go`: `IsAuthError`, `IsRateLimited`, `RetryAfter`, `IsBodyLimit`, `StatusCode`.
+- Preserve the typed errors and predicate helpers from `marketsurge/errors.go`: `IsAuthError`, `IsRateLimited`, `RetryAfter`, `IsBodyLimit`, `StatusCode`.
 - All exported identifiers must have Go doc comments that are useful, not just restatements of the name.
 
 ## Security and session safety
 
 - Flag any code that exposes cookie values, JWT tokens, or browser profile paths in log statements, error messages, test output, or documentation examples.
 - Prefer explicit sessions via `NewSession` for service use. `browserauth.SessionFromFirefox` is for desktop automation only, not server-side code.
-- Browser-backed auth must stay isolated to the `browserauth/` package. The root package must not import kooky or SQLite.
+- Browser-backed auth must stay isolated to the `marketsurge/browserauth/` package. The `marketsurge` package must not import kooky or SQLite.
 - Avoid silent fallback behavior around HTTP status handling, GraphQL error decoding, and body limits. Return clear typed errors instead.
 
 ## API boundary expectations

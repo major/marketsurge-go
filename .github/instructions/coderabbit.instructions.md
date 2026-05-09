@@ -20,9 +20,9 @@ Path instructions in `.coderabbit.yaml` are scoped to the concerns that matter m
 
 **Explicit session and JWT handling** - `ExchangeJWT` uses cookies to obtain a JWT. Sessions created via `NewSession` carry that JWT. Neither cookies nor JWT values should appear in error messages, log output, or test assertions. Flag any exposure.
 
-**Browser-auth isolation** - kooky, SQLite, and Firefox profile access belong in `browserauth/` only. The root package must not import them. If a change adds such an import to the root package, that's a hard violation.
+**Browser-auth isolation** - kooky, SQLite, and Firefox profile access belong in `marketsurge/browserauth/` only. The `marketsurge` package must not import them. If a change adds such an import to the `marketsurge` package, that's a hard violation.
 
-**Typed error classification** - `errors.go` defines the error taxonomy for this library. `IsAuthError`, `IsRateLimited`, `RetryAfter`, `IsBodyLimit`, and `StatusCode` are part of the public API. Don't remove or weaken them. New error conditions should fit into this taxonomy or extend it with a new predicate.
+**Typed error classification** - `marketsurge/errors.go` defines the error taxonomy for this library. `IsAuthError`, `IsRateLimited`, `RetryAfter`, `IsBodyLimit`, and `StatusCode` are part of the public API. Don't remove or weaken them. New error conditions should fit into this taxonomy or extend it with a new predicate.
 
 **Context propagation** - Every method that performs an HTTP request must accept `context.Context` as its first parameter and pass it to the underlying HTTP request. Missing context propagation is a correctness bug.
 

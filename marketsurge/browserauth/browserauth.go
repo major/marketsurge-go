@@ -12,7 +12,7 @@ import (
 	"github.com/browserutils/kooky"
 	"github.com/browserutils/kooky/browser/firefox"
 
-	marketsurge "github.com/major/marketsurge-go"
+	"github.com/major/marketsurge-go/marketsurge"
 )
 
 const investorsDomain = "investors.com"

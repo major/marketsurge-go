@@ -23,7 +23,7 @@ import (
 	"fmt"
 	"log"
 
-	marketsurge "github.com/major/marketsurge-go"
+	"github.com/major/marketsurge-go/marketsurge"
 )
 
 func main() {
@@ -65,7 +65,7 @@ import (
 	"log"
 	"net/http"
 
-	marketsurge "github.com/major/marketsurge-go"
+	"github.com/major/marketsurge-go/marketsurge"
 )
 
 func main() {
@@ -114,8 +114,8 @@ import (
 	"context"
 	"log"
 
-	marketsurge "github.com/major/marketsurge-go"
-	"github.com/major/marketsurge-go/browserauth"
+	"github.com/major/marketsurge-go/marketsurge"
+	"github.com/major/marketsurge-go/marketsurge/browserauth"
 )
 
 func main() {
@@ -151,20 +151,20 @@ func main() {
 
 | Method | Wire operation | File | Notes |
 |--------|---------------|------|-------|
-| `OtherMarketData` | `OtherMarketData` | `market_data.go` | |
-| `Fundamentals` | `FundermentalDataBox` | `fundamentals.go` | upstream typo in wire name |
-| `Ownership` | `Ownership` | `ownership.go` | |
-| `RSRatingRIPanel` | `RSRatingRIPanel` | `relative_strength.go` | |
-| `ChartMarketData` | `ChartMarketData` | `charts.go` | daily periodicity |
-| `ChartMarketDataWeekly` | `ChartMarketData` | `charts.go` | weekly periodicity |
-| `FetchChartMarkups` | `FetchChartMarkups` | `chart_markups.go` | |
-| `GetAllWatchlistNames` | `GetAllWatchlistNames` | `watchlists.go` | |
-| `FlaggedSymbols` | `FlaggedSymbols` | `watchlists.go` | |
-| `MarketDataAdhocScreen` | `MarketDataAdhocScreen` | `screens.go` | |
-| `RunScreen` | `RunScreen` | `screens.go` | |
-| `Screens` | `Screens` | `screens.go` | |
-| `CoachTree` | `CoachTree` | `coach_tree.go` | |
-| `IndustryGroupRS` | `IndustryGroupRS` | `coach_tree.go` | |
+| `OtherMarketData` | `OtherMarketData` | `marketsurge/market_data.go` | |
+| `Fundamentals` | `FundermentalDataBox` | `marketsurge/fundamentals.go` | upstream typo in wire name |
+| `Ownership` | `Ownership` | `marketsurge/ownership.go` | |
+| `RSRatingRIPanel` | `RSRatingRIPanel` | `marketsurge/relative_strength.go` | |
+| `ChartMarketData` | `ChartMarketData` | `marketsurge/charts.go` | daily periodicity |
+| `ChartMarketDataWeekly` | `ChartMarketData` | `marketsurge/charts.go` | weekly periodicity |
+| `FetchChartMarkups` | `FetchChartMarkups` | `marketsurge/chart_markups.go` | |
+| `GetAllWatchlistNames` | `GetAllWatchlistNames` | `marketsurge/watchlists.go` | |
+| `FlaggedSymbols` | `FlaggedSymbols` | `marketsurge/watchlists.go` | |
+| `MarketDataAdhocScreen` | `MarketDataAdhocScreen` | `marketsurge/screens.go` | |
+| `RunScreen` | `RunScreen` | `marketsurge/screens.go` | |
+| `Screens` | `Screens` | `marketsurge/screens.go` | |
+| `CoachTree` | `CoachTree` | `marketsurge/coach_tree.go` | |
+| `IndustryGroupRS` | `IndustryGroupRS` | `marketsurge/coach_tree.go` | |
 | Phase 5 operations | various | - | not implemented - undiscoverable from agent sources |
 
 Each endpoint has a `NewXxxRequest` constructor with sensible defaults. All methods take `context.Context` as the first argument.
@@ -178,7 +178,7 @@ import (
 	"fmt"
 	"time"
 
-	marketsurge "github.com/major/marketsurge-go"
+	"github.com/major/marketsurge-go/marketsurge"
 )
 
 resp, err := client.OtherMarketData(ctx, req)

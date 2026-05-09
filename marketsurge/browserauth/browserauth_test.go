@@ -8,7 +8,7 @@ import (
 
 	"github.com/browserutils/kooky"
 
-	marketsurge "github.com/major/marketsurge-go"
+	"github.com/major/marketsurge-go/marketsurge"
 )
 
 const (

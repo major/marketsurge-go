@@ -19,7 +19,7 @@ func TestImportSmoke(t *testing.T) {
 		moduleGoDirective(t),
 		root,
 	)
-	goTest := "package smoke\n\nimport (\n\t\"testing\"\n\n\tmarketsurge \"github.com/major/marketsurge-go\"\n)\n\nfunc TestCoreExplicitSessionImport(t *testing.T) {\n\t_ = t\n\t_ = marketsurge.NewClient\n\t_ = marketsurge.NewSession\n}\n"
+	goTest := "package smoke\n\nimport (\n\t\"testing\"\n\n\t\"github.com/major/marketsurge-go/marketsurge\"\n)\n\nfunc TestCoreExplicitSessionImport(t *testing.T) {\n\t_ = t\n\t_ = marketsurge.NewClient\n\t_ = marketsurge.NewSession\n}\n"
 	mustWriteFile(t, filepath.Join(dir, "go.mod"), goMod)
 	mustWriteFile(t, filepath.Join(dir, "smoke_test.go"), goTest)
 
@@ -34,7 +34,7 @@ func TestImportSmoke(t *testing.T) {
 func TestRootPackageDependencyIsolation(t *testing.T) {
 	t.Parallel()
 
-	deps := listPackageDeps(t, "github.com/major/marketsurge-go")
+	deps := listPackageDeps(t, "github.com/major/marketsurge-go/marketsurge")
 	err := forbidDependencySubstrings(deps, []string{
 		"kooky",
 		"sqlite",
@@ -58,7 +58,7 @@ func TestRootPackageDependencyIsolationFailsClosed(t *testing.T) {
 		{
 			name: "clean dependency list",
 			deps: []string{
-				"github.com/major/marketsurge-go",
+				"github.com/major/marketsurge-go/marketsurge",
 				"net/http",
 			},
 			wantError: false,
@@ -66,7 +66,7 @@ func TestRootPackageDependencyIsolationFailsClosed(t *testing.T) {
 		{
 			name: "forbidden dependency is rejected",
 			deps: []string{
-				"github.com/major/marketsurge-go",
+				"github.com/major/marketsurge-go/marketsurge",
 				"github.com/browserutils/kooky",
 			},
 			wantError: true,
@@ -109,7 +109,7 @@ func moduleRoot(t *testing.T) string {
 		t.Fatalf("os.Getwd() = %v", err)
 	}
 
-	return cwd
+	return filepath.Dir(cwd)
 }
 
 func moduleGoDirective(t *testing.T) string {
