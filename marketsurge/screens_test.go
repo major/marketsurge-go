@@ -131,6 +131,64 @@ func TestMarketDataAdhocScreenCounts(t *testing.T) {
 	}
 }
 
+func TestMarketDataAdhocScreenAdhocQueryString(t *testing.T) {
+	t.Parallel()
+
+	result := adhocScreenFixture(t)
+
+	if result.AdhocQueryString == nil {
+		t.Fatal("AdhocQueryString is nil")
+	}
+	if got, want := *result.AdhocQueryString, "CompositeRating >= 90"; got != want {
+		t.Errorf("AdhocQueryString = %q, want %q", got, want)
+	}
+}
+
+func TestMarketDataAdhocScreenAdhocQuery(t *testing.T) {
+	t.Parallel()
+
+	result := adhocScreenFixture(t)
+
+	if result.AdhocQuery == nil {
+		t.Fatal("AdhocQuery is nil")
+	}
+	if got, want := len(result.AdhocQuery.Terms), 1; got != want {
+		t.Fatalf("len(AdhocQuery.Terms) = %d, want %d", got, want)
+	}
+
+	term := result.AdhocQuery.Terms[0]
+	if term.NumberOfMatchingInstruments == nil {
+		t.Fatal("term.NumberOfMatchingInstruments is nil")
+	}
+	if got, want := *term.NumberOfMatchingInstruments, 2; got != want {
+		t.Errorf("term.NumberOfMatchingInstruments = %d, want %d", got, want)
+	}
+	if term.Ordinal == nil {
+		t.Fatal("term.Ordinal is nil")
+	}
+	if got, want := *term.Ordinal, 1; got != want {
+		t.Errorf("term.Ordinal = %d, want %d", got, want)
+	}
+	assertStringPtr(t, "term.Operand", term.Operand, ">=")
+
+	if term.Left == nil {
+		t.Fatal("term.Left is nil")
+	}
+	assertStringPtr(t, "term.Left.Name", term.Left.Name, "CompositeRating")
+	assertStringPtr(t, "term.Left.MDItemID", term.Left.MDItemID, "2001")
+
+	if term.Right == nil {
+		t.Fatal("term.Right is nil")
+	}
+	assertStringPtr(t, "term.Right.Value", term.Right.Value, "90")
+	if term.Right.MaximumValue != nil {
+		t.Errorf("term.Right.MaximumValue = %v, want nil", *term.Right.MaximumValue)
+	}
+	if term.Right.MinimumValue != nil {
+		t.Errorf("term.Right.MinimumValue = %v, want nil", *term.Right.MinimumValue)
+	}
+}
+
 func TestMarketDataAdhocScreenResponseValues(t *testing.T) {
 	t.Parallel()
 
@@ -338,7 +396,11 @@ func runScreenFixture(t *testing.T) *RunScreenResult {
 	t.Cleanup(srv.Close)
 
 	client := newGraphQLTestClient(t, srv.URL)
-	req := NewRunScreenRequest("screen-abc-123", []string{"Symbol", "CompanyName"})
+	columns := []RunScreenResponseColumn{
+		{Name: "Symbol"},
+		{Name: "CompanyName"},
+	}
+	req := NewRunScreenRequest("screen-abc-123", columns)
 	resp, err := client.RunScreen(context.Background(), req)
 	if err != nil {
 		t.Fatalf("RunScreen() error = %v", err)
@@ -352,7 +414,7 @@ func runScreenFixture(t *testing.T) *RunScreenResult {
 func TestNewRunScreenRequest(t *testing.T) {
 	t.Parallel()
 
-	req := NewRunScreenRequest("screen-123", []string{"Symbol"})
+	req := NewRunScreenRequest("screen-123", []RunScreenResponseColumn{{Name: "Symbol"}})
 
 	if got, want := req.Input.CorrelationTag, DefaultRunScreenCorrelationTag; got != want {
 		t.Errorf("CorrelationTag = %q, want %q", got, want)
@@ -375,8 +437,14 @@ func TestNewRunScreenRequest(t *testing.T) {
 	if got, want := req.Input.Skip, 0; got != want {
 		t.Errorf("Skip = %d, want %d", got, want)
 	}
+	if req.Input.IncludeSource != nil {
+		t.Errorf("IncludeSource = %v, want nil", req.Input.IncludeSource)
+	}
 	if got, want := len(req.Input.ResponseColumns), 1; got != want {
 		t.Errorf("len(ResponseColumns) = %d, want %d", got, want)
+	}
+	if got, want := req.Input.ResponseColumns[0].Name, "Symbol"; got != want {
+		t.Errorf("ResponseColumns[0].Name = %q, want %q", got, want)
 	}
 }
 
@@ -443,7 +511,11 @@ func TestRunScreenRequestBody(t *testing.T) {
 	t.Cleanup(srv.Close)
 
 	client := newGraphQLTestClient(t, srv.URL)
-	req := NewRunScreenRequest("screen-abc-123", []string{"Symbol", "CompanyName"})
+	columns := []RunScreenResponseColumn{
+		{Name: "Symbol"},
+		{Name: "CompanyName"},
+	}
+	req := NewRunScreenRequest("screen-abc-123", columns)
 	_, err = client.RunScreen(context.Background(), req)
 	if err != nil {
 		t.Fatalf("RunScreen() error = %v", err)

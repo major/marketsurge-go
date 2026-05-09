@@ -9,7 +9,7 @@ const queryMarketDataAdhocScreen = `query MarketDataAdhocScreen(
   $responseColumns: [MDAdhocScreenerDataItemInput!]!
   $resultLimit: Int!
   $pageSize: Int!
-  $pageSkip: Int!
+  $pageSkip: Int
   $includeSource: MDScreenerDataSourceInput!
   $resultType: MDScreenerResultType
 ) {
@@ -28,6 +28,23 @@ const queryMarketDataAdhocScreen = `query MarketDataAdhocScreen(
     errorValues
     numberOfInstrumentsInSource
     numberOfMatchingInstruments
+    adhocQueryString
+    adhocQuery {
+      terms {
+        numberOfMatchingInstruments
+        ordinal
+        left {
+          name
+          mdItemID
+        }
+        operand
+        right {
+          value
+          maximumValue
+          minimumValue
+        }
+      }
+    }
     responseValues {
       value
       mdItem {
@@ -104,9 +121,18 @@ const (
 // MarketDataAdhocScreen request types
 // ---------------------------------------------------------------------------
 
+// AdhocScreenSortInformation specifies the sort direction and priority for a
+// response column in an adhoc screen query.
+type AdhocScreenSortInformation struct {
+	Direction string `json:"direction"`
+	Order     string `json:"order"`
+}
+
 // AdhocScreenResponseColumn identifies a data column to include in the adhoc screen response.
+// Set SortInformation to control server-side sorting of the results.
 type AdhocScreenResponseColumn struct {
-	Name string `json:"name"`
+	Name            string                      `json:"name"`
+	SortInformation *AdhocScreenSortInformation `json:"sortInformation,omitempty"`
 }
 
 // AdhocScreenIncludeSource specifies the data source for an adhoc screen query.
@@ -170,21 +196,38 @@ type adhocScreenVariables struct {
 // RunScreen request types
 // ---------------------------------------------------------------------------
 
-// RunScreenIncludeSource is the includeSource payload for RunScreen queries.
-// It is always sent as an empty object ({}) on the wire.
-type RunScreenIncludeSource struct{}
+// RunScreenSortInformation specifies the sort direction and priority for a
+// response column in a RunScreen query.
+type RunScreenSortInformation struct {
+	Direction string `json:"direction"`
+	Order     string `json:"order"`
+}
+
+// RunScreenResponseColumn identifies a data column to include in the RunScreen response.
+// Set SortInformation to control server-side sorting of the results.
+type RunScreenResponseColumn struct {
+	Name            string                    `json:"name"`
+	SortInformation *RunScreenSortInformation `json:"sortInformation,omitempty"`
+}
+
+// RunScreenIncludeSource specifies the data source universe for a RunScreen query.
+// Set Source to restrict results to a specific source (e.g. "IBD_STOCKS").
+// A nil RunScreenIncludeSource pointer on RunScreenInput sends null on the wire.
+type RunScreenIncludeSource struct {
+	Source *string `json:"source,omitempty"`
+}
 
 // RunScreenInput holds the input parameters for a RunScreen query.
 type RunScreenInput struct {
-	CorrelationTag  string                 `json:"correlationTag"`
-	CoachAccount    bool                   `json:"coachAccount"`
-	IncludeSource   RunScreenIncludeSource `json:"includeSource"`
-	PageSize        int                    `json:"pageSize"`
-	ResultLimit     int                    `json:"resultLimit"`
-	ScreenID        string                 `json:"screenId"`
-	Site            string                 `json:"site"`
-	Skip            int                    `json:"skip"`
-	ResponseColumns []string               `json:"responseColumns"`
+	CorrelationTag  string                    `json:"correlationTag"`
+	CoachAccount    bool                      `json:"coachAccount"`
+	IncludeSource   *RunScreenIncludeSource   `json:"includeSource"`
+	PageSize        int                       `json:"pageSize"`
+	ResultLimit     int                       `json:"resultLimit"`
+	ScreenID        string                    `json:"screenId"`
+	Site            string                    `json:"site"`
+	Skip            int                       `json:"skip"`
+	ResponseColumns []RunScreenResponseColumn `json:"responseColumns"`
 }
 
 // RunScreenRequest holds parameters for the RunScreen query.
@@ -194,12 +237,11 @@ type RunScreenRequest struct {
 
 // NewRunScreenRequest creates a RunScreenRequest with sensible defaults
 // for the given screen ID and response columns.
-func NewRunScreenRequest(screenID string, responseColumns []string) RunScreenRequest {
+func NewRunScreenRequest(screenID string, responseColumns []RunScreenResponseColumn) RunScreenRequest {
 	return RunScreenRequest{
 		Input: RunScreenInput{
 			CorrelationTag:  DefaultRunScreenCorrelationTag,
 			CoachAccount:    true,
-			IncludeSource:   RunScreenIncludeSource{},
 			PageSize:        DefaultRunScreenPageSize,
 			ResultLimit:     DefaultRunScreenResultLimit,
 			ScreenID:        screenID,
@@ -256,7 +298,36 @@ type AdhocScreenResult struct {
 	ErrorValues                 []string            `json:"errorValues"`
 	NumberOfInstrumentsInSource *int                `json:"numberOfInstrumentsInSource"`
 	NumberOfMatchingInstruments *int                `json:"numberOfMatchingInstruments"`
+	AdhocQueryString            *string             `json:"adhocQueryString"`
+	AdhocQuery                  *AdhocQueryResult   `json:"adhocQuery"`
 	ResponseValues              [][]AdhocScreenCell `json:"responseValues"`
+}
+
+// AdhocQueryResult holds the parsed filter criteria returned by an adhoc screen query.
+type AdhocQueryResult struct {
+	Terms []AdhocQueryTerm `json:"terms"`
+}
+
+// AdhocQueryTerm represents a single filter term in an adhoc screen query.
+type AdhocQueryTerm struct {
+	NumberOfMatchingInstruments *int                 `json:"numberOfMatchingInstruments"`
+	Ordinal                     *int                 `json:"ordinal"`
+	Left                        *AdhocQueryTermLeft  `json:"left"`
+	Operand                     *string              `json:"operand"`
+	Right                       *AdhocQueryTermRight `json:"right"`
+}
+
+// AdhocQueryTermLeft identifies the market data item being filtered.
+type AdhocQueryTermLeft struct {
+	Name     *string `json:"name"`
+	MDItemID *string `json:"mdItemID"`
+}
+
+// AdhocQueryTermRight holds the comparison values for a filter term.
+type AdhocQueryTermRight struct {
+	Value        *string `json:"value"`
+	MaximumValue *string `json:"maximumValue"`
+	MinimumValue *string `json:"minimumValue"`
 }
 
 // AdhocScreenCell represents a single cell in an adhoc screen response row.
