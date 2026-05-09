@@ -169,6 +169,10 @@ func main() {
 
 Each endpoint has a `NewXxxRequest` constructor with sensible defaults. All methods take `context.Context` as the first argument.
 
+## Static catalogs
+
+`Columns()` returns the known MarketSurge response column catalog. `ReportScreens()` returns the built-in report screen catalog with each screen ID, name, and description captured from the MarketSurge web bundle. Both functions return copies so callers can filter or mutate the returned slices safely.
+
 ## Error handling
 
 HTTP errors come back as `*StatusError`. GraphQL-level errors come back as `*GraphQLError`. Use the helper functions to classify errors without type-asserting yourself:
