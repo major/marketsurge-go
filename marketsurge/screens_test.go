@@ -734,12 +734,32 @@ func TestScreensEntries(t *testing.T) {
 	if got, want := *s.Type, "CUSTOM"; got != want {
 		t.Errorf("Type = %q, want %q", got, want)
 	}
+}
+
+func TestScreensFilterCriteria(t *testing.T) {
+	t.Parallel()
+
+	screens := screensFixture(t)
+	s := screens[0]
+
 	if s.FilterCriteria == nil {
 		t.Fatal("FilterCriteria is nil")
 	}
-	if got, want := *s.FilterCriteria, "CompositeRating >= 90"; got != want {
-		t.Errorf("FilterCriteria = %q, want %q", got, want)
+	assertStringPtr(t, "FilterCriteria.Type", s.FilterCriteria.Type, "AND")
+	if got, want := len(s.FilterCriteria.Terms), 1; got != want {
+		t.Fatalf("len(FilterCriteria.Terms) = %d, want %d", got, want)
 	}
+
+	term := s.FilterCriteria.Terms[0]
+	if term.Left == nil {
+		t.Fatal("Terms[0].Left is nil")
+	}
+	assertStringPtr(t, "Terms[0].Left.Name", term.Left.Name, "CompositeRating")
+	assertStringPtr(t, "Terms[0].Operand", term.Operand, "GREATER_THAN_OR_EQUAL")
+	if term.Right == nil {
+		t.Fatal("Terms[0].Right is nil")
+	}
+	assertStringPtr(t, "Terms[0].Right.Value", term.Right.Value, "90")
 }
 
 func TestScreensSource(t *testing.T) {

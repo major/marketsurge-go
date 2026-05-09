@@ -394,15 +394,15 @@ type ScreensUser struct {
 
 // ScreenEntry represents a saved screen definition.
 type ScreenEntry struct {
-	Site           *string       `json:"site"`
-	ID             *string       `json:"id"`
-	Name           *string       `json:"name"`
-	Type           *string       `json:"type"`
-	Source         *ScreenSource `json:"source"`
-	UpdatedAt      *string       `json:"updatedAt"`
-	FilterCriteria *string       `json:"filterCriteria"`
-	Description    *string       `json:"description"`
-	CreatedAt      *string       `json:"createdAt"`
+	Site           *string               `json:"site"`
+	ID             *string               `json:"id"`
+	Name           *string               `json:"name"`
+	Type           *string               `json:"type"`
+	Source         *ScreenSource         `json:"source"`
+	UpdatedAt      *string               `json:"updatedAt"`
+	FilterCriteria *ScreenFilterCriteria `json:"filterCriteria"`
+	Description    *string               `json:"description"`
+	CreatedAt      *string               `json:"createdAt"`
 }
 
 // ScreenSource represents a data source linked to a saved screen.
