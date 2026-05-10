@@ -1,7 +1,9 @@
 package marketsurge
 
 import (
+	"bytes"
 	"context"
+	"encoding/json"
 	"strings"
 	"time"
 )
@@ -1316,6 +1318,56 @@ type MDSplit struct {
 type MDSymbology struct {
 	Company    *MDCompany    `json:"company"`
 	Instrument *MDInstrument `json:"instrument"`
+}
+
+// UnmarshalJSON accepts both historical object-shaped company data and the
+// array-shaped company data now returned by some live MarketSurge responses.
+func (m *MDSymbology) UnmarshalJSON(data []byte) error {
+	type mdSymbology MDSymbology
+	var raw struct {
+		*mdSymbology
+
+		Company json.RawMessage `json:"company"`
+	}
+	raw.mdSymbology = (*mdSymbology)(m)
+
+	if err := json.Unmarshal(data, &raw); err != nil {
+		return err
+	}
+
+	if err := m.decodeCompany(raw.Company); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (m *MDSymbology) decodeCompany(data json.RawMessage) error {
+	m.Company = nil
+
+	data = bytes.TrimSpace(data)
+	if len(data) == 0 || bytes.Equal(data, []byte("null")) {
+		return nil
+	}
+
+	if data[0] == '[' {
+		var companies []MDCompany
+		if err := json.Unmarshal(data, &companies); err != nil {
+			return err
+		}
+		if len(companies) == 0 {
+			return nil
+		}
+		m.Company = &companies[0]
+		return nil
+	}
+
+	var company MDCompany
+	if err := json.Unmarshal(data, &company); err != nil {
+		return err
+	}
+	m.Company = &company
+	return nil
 }
 
 // MDCompany holds company profile information.

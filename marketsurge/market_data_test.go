@@ -201,6 +201,62 @@ func TestOtherMarketDataSymbology(t *testing.T) {
 	}
 }
 
+func TestOtherMarketDataSymbologyCompanyArray(t *testing.T) {
+	t.Parallel()
+
+	const response = `{
+		"data": {
+			"marketData": [
+				{
+					"id": "AMD",
+					"symbology": {
+						"company": [
+							{
+								"companyName": "Advanced Micro Devices, Inc.",
+								"address": "2485 Augustine Drive",
+								"address2": null,
+								"phone": "408-749-4000",
+								"businessDescription": "Designs semiconductor products.",
+								"url": "https://www.amd.com",
+								"city": "Santa Clara",
+								"country": "US",
+								"stateProvince": "CA"
+							}
+						]
+					}
+				}
+			]
+		}
+	}`
+
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(response))
+	}))
+	t.Cleanup(srv.Close)
+
+	client := newGraphQLTestClient(t, srv.URL)
+	req := NewOtherMarketDataRequest("AMD")
+	resp, err := client.OtherMarketData(context.Background(), req)
+	if err != nil {
+		t.Fatalf("OtherMarketData() error = %v", err)
+	}
+	if got, want := len(resp.MarketData), 1; got != want {
+		t.Fatalf("len(MarketData) = %d, want %d", got, want)
+	}
+
+	if resp.MarketData[0].Symbology == nil {
+		t.Fatal("MarketData[0].Symbology is nil")
+	}
+	company := resp.MarketData[0].Symbology.Company
+	if company == nil || company.CompanyName == nil {
+		t.Fatal("MarketData[0].Symbology.Company.CompanyName is nil")
+	}
+	if got, want := *company.CompanyName, "Advanced Micro Devices, Inc."; got != want {
+		t.Errorf("MarketData[0].Symbology.Company.CompanyName = %q, want %q", got, want)
+	}
+}
+
 func TestOtherMarketDataOwnership(t *testing.T) {
 	t.Parallel()
 	item := otherMarketDataFixture(t)
