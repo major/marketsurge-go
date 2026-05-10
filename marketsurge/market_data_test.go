@@ -189,6 +189,48 @@ func TestOtherMarketDataIndustry(t *testing.T) {
 	}
 }
 
+func TestOtherMarketDataIndustryNumericIndCode(t *testing.T) {
+	t.Parallel()
+
+	const response = `{
+		"data": {
+			"marketData": [
+				{
+					"id": "AMD",
+					"industry": {
+						"name": "Electronics-Semiconductor Fabless",
+						"indCode": 123
+					}
+				}
+			]
+		}
+	}`
+
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(response))
+	}))
+	t.Cleanup(srv.Close)
+
+	client := newGraphQLTestClient(t, srv.URL)
+	req := NewOtherMarketDataRequest("AMD")
+	resp, err := client.OtherMarketData(context.Background(), req)
+	if err != nil {
+		t.Fatalf("OtherMarketData() error = %v", err)
+	}
+	if got, want := len(resp.MarketData), 1; got != want {
+		t.Fatalf("len(MarketData) = %d, want %d", got, want)
+	}
+
+	industry := resp.MarketData[0].Industry
+	if industry == nil || industry.IndCode == nil {
+		t.Fatal("MarketData[0].Industry.IndCode is nil")
+	}
+	if got, want := *industry.IndCode, "123"; got != want {
+		t.Errorf("MarketData[0].Industry.IndCode = %q, want %q", got, want)
+	}
+}
+
 func TestOtherMarketDataSymbology(t *testing.T) {
 	t.Parallel()
 	item := otherMarketDataFixture(t)

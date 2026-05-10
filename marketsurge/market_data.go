@@ -1594,6 +1594,48 @@ type MDIndustry struct {
 	NumberOfStocksInGroup *int          `json:"numberOfStocksInGroup"`
 }
 
+// UnmarshalJSON accepts industry codes as either strings or numbers. Live
+// MarketSurge responses have used both shapes for the same GraphQL field.
+func (m *MDIndustry) UnmarshalJSON(data []byte) error {
+	type mdIndustry MDIndustry
+	var raw struct {
+		*mdIndustry
+
+		IndCode json.RawMessage `json:"indCode"`
+	}
+	raw.mdIndustry = (*mdIndustry)(m)
+
+	if err := json.Unmarshal(data, &raw); err != nil {
+		return err
+	}
+	return m.decodeIndCode(raw.IndCode)
+}
+
+func (m *MDIndustry) decodeIndCode(data json.RawMessage) error {
+	m.IndCode = nil
+	data = bytes.TrimSpace(data)
+	if len(data) == 0 || bytes.Equal(data, []byte("null")) {
+		return nil
+	}
+
+	if data[0] == '"' {
+		var value string
+		if err := json.Unmarshal(data, &value); err != nil {
+			return err
+		}
+		m.IndCode = &value
+		return nil
+	}
+
+	var value json.Number
+	if err := json.Unmarshal(data, &value); err != nil {
+		return err
+	}
+	code := value.String()
+	m.IndCode = &code
+	return nil
+}
+
 // MDGroupRank holds an industry group rank for a period.
 type MDGroupRank struct {
 	Value        *int    `json:"value"`
