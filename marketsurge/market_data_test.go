@@ -257,6 +257,61 @@ func TestOtherMarketDataSymbologyCompanyArray(t *testing.T) {
 	}
 }
 
+func TestOtherMarketDataSymbologyInstrumentArray(t *testing.T) {
+	t.Parallel()
+
+	const response = `{
+		"data": {
+			"marketData": [
+				{
+					"id": "AMD",
+					"symbology": {
+						"instrument": [
+							{
+								"subType": "COMMON_STOCK",
+								"ipoDate": {"value": "1972-09-27"}
+							}
+						]
+					}
+				}
+			]
+		}
+	}`
+
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(response))
+	}))
+	t.Cleanup(srv.Close)
+
+	client := newGraphQLTestClient(t, srv.URL)
+	req := NewOtherMarketDataRequest("AMD")
+	resp, err := client.OtherMarketData(context.Background(), req)
+	if err != nil {
+		t.Fatalf("OtherMarketData() error = %v", err)
+	}
+	if got, want := len(resp.MarketData), 1; got != want {
+		t.Fatalf("len(MarketData) = %d, want %d", got, want)
+	}
+
+	if resp.MarketData[0].Symbology == nil {
+		t.Fatal("MarketData[0].Symbology is nil")
+	}
+	instrument := resp.MarketData[0].Symbology.Instrument
+	if instrument == nil || instrument.SubType == nil {
+		t.Fatal("MarketData[0].Symbology.Instrument.SubType is nil")
+	}
+	if got, want := *instrument.SubType, "COMMON_STOCK"; got != want {
+		t.Errorf("MarketData[0].Symbology.Instrument.SubType = %q, want %q", got, want)
+	}
+	if instrument.IPODate == nil {
+		t.Fatal("MarketData[0].Symbology.Instrument.IPODate is nil")
+	}
+	if got, want := instrument.IPODate.Value, "1972-09-27"; got != want {
+		t.Errorf("MarketData[0].Symbology.Instrument.IPODate.Value = %q, want %q", got, want)
+	}
+}
+
 func TestOtherMarketDataOwnership(t *testing.T) {
 	t.Parallel()
 	item := otherMarketDataFixture(t)

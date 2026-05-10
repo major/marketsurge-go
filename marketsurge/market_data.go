@@ -1320,14 +1320,15 @@ type MDSymbology struct {
 	Instrument *MDInstrument `json:"instrument"`
 }
 
-// UnmarshalJSON accepts both historical object-shaped company data and the
-// array-shaped company data now returned by some live MarketSurge responses.
+// UnmarshalJSON accepts both historical object-shaped symbology data and the
+// array-shaped data now returned by some live MarketSurge responses.
 func (m *MDSymbology) UnmarshalJSON(data []byte) error {
 	type mdSymbology MDSymbology
 	var raw struct {
 		*mdSymbology
 
-		Company json.RawMessage `json:"company"`
+		Company    json.RawMessage `json:"company"`
+		Instrument json.RawMessage `json:"instrument"`
 	}
 	raw.mdSymbology = (*mdSymbology)(m)
 
@@ -1336,6 +1337,9 @@ func (m *MDSymbology) UnmarshalJSON(data []byte) error {
 	}
 
 	if err := m.decodeCompany(raw.Company); err != nil {
+		return err
+	}
+	if err := m.decodeInstrument(raw.Instrument); err != nil {
 		return err
 	}
 
@@ -1367,6 +1371,34 @@ func (m *MDSymbology) decodeCompany(data json.RawMessage) error {
 		return err
 	}
 	m.Company = &company
+	return nil
+}
+
+func (m *MDSymbology) decodeInstrument(data json.RawMessage) error {
+	m.Instrument = nil
+
+	data = bytes.TrimSpace(data)
+	if len(data) == 0 || bytes.Equal(data, []byte("null")) {
+		return nil
+	}
+
+	if data[0] == '[' {
+		var instruments []MDInstrument
+		if err := json.Unmarshal(data, &instruments); err != nil {
+			return err
+		}
+		if len(instruments) == 0 {
+			return nil
+		}
+		m.Instrument = &instruments[0]
+		return nil
+	}
+
+	var instrument MDInstrument
+	if err := json.Unmarshal(data, &instrument); err != nil {
+		return err
+	}
+	m.Instrument = &instrument
 	return nil
 }
 
